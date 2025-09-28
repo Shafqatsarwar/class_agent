@@ -1,0 +1,21 @@
+[project]
+name = "class-agent"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "M Shafqat sarwar", email = "khansarwar1@hotmail.com" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "openai-agents>=0.3.2",
+    "python-env>=1.0.0",
+]
+
+[project.scripts]
+class-agent = "class_agent:main"
+run-agent = "class_agent.main:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
