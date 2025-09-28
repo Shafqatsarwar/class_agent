@@ -10,62 +10,49 @@ from agents import (
     function_tool,
     RunContextWrapper
 )
-from agents import ResponseTextDeltaEvent
+from agents.result import pretty_print_run_result_streaming   # ✅ use built-in printer
 from rich import print
 from dataclasses import dataclass
 
-# --- Load environment ---
 load_dotenv(find_dotenv())
 api_key = os.getenv("GEMINI_API_KEY")
 
-# --- External client for Gemini ---
 external_client = AsyncOpenAI(
     base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
-    api_key=api_key
+    api_key=api_key,
 )
 set_tracing_disabled(True)
 
-# --- LLM Model ---
 llm_model = OpenAIChatCompletionsModel(
     openai_client=external_client,
-    model="gemini-2.0-flash" 
+    model="gemini-2.5-flash"
 )
 
-# --- User Dataclass ---
 @dataclass
 class User:
     name: str
     age: int
     location: str
 
-# --- Tool ---
 @function_tool
 def user_info(ctx: RunContextWrapper[User]) -> str:
     return f"User {ctx.context.name} is {ctx.context.age} years old and lives in {ctx.context.location}."
 
-# --- Dynamic Instructions ---
 def dynamic_instruction(ctx: RunContextWrapper[User], agent: Agent) -> str:
     if ctx.context.age < 18:
-        return "You are a minor, you can't assist about user_info guide, but respond as a helpful assistant for general queries."
+        return "You are a minor. You can't assist about user_info, but you may respond as a helpful assistant for general queries."
     else:
-        return "You are a helpful assistant, which can use user_info tool to get user information."
+        return "You are a helpful assistant. You can use the user_info tool to get user information."
 
-# --- User Context ---
 user1 = User(name="Khan", age=35, location="Lahore")
 
-# --- Agent Setup ---
 agent = Agent[User](
     name="Class Agent",
     instructions=dynamic_instruction,
     model=llm_model,
     tools=[user_info]
 )
-agent1 = agent.clone(
-    name = "weather Assistant",
-    instructions= "You are a helpful assistant, which can use weather tool to get weather information."
 
-)
-# --- Main Function ---
 async def mainfun():
     result = Runner.run_streamed(
         starting_agent=agent,
@@ -73,14 +60,10 @@ async def mainfun():
         context=user1
     )
     async for event in result.stream_events():
-        if event.type == "raw_response_event" and isinstance(event.data, ResponseTextDeltaEvent):
-            print(event.data.delta, end="***\n")   # ✅ Stream partial text
-    print("\nFinished processed events!")          # ✅ Moved outside loop
+        pretty_print_run_result_streaming(event)  # ✅ Safe printer for your SDK version
 
-# --- Entry Point ---
 def main():
     asyncio.run(mainfun())
-
 
 if __name__ == "__main__":
     main()

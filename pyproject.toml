@@ -8,13 +8,16 @@ authors = [
 ]
 requires-python = ">=3.13"
 dependencies = [
+    "chainlit>=2.8.1",
     "openai-agents>=0.3.2",
     "python-env>=1.0.0",
+    "rich>=14.1.0",
 ]
 
 [project.scripts]
 class-agent = "class_agent:main"
 run-agent = "class_agent.main:main"
+agent = "class_agent.main1:main"
 
 [build-system]
 requires = ["hatchling"]
